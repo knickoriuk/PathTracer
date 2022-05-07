@@ -9,5 +9,6 @@ A PathTracing Engine for rendering 3D scenes with realistic light-ray behaviour.
 
 ## Sample Images
 
-<img src="/Renders/BubbleTea_PostProcessed.jpg" width="400"/>
-<img src="/Renders/SciFiCube_PostProcessed.png" width="400"/>
+<img src="/Renders/BubbleTea.png" width="400"/>
+<img src="/Renders/SciFiCube.png" width="400"/>
+<img src="/Renders/CornellBox.png" width="400"/>
