@@ -29,7 +29,7 @@ prepare:
 clean:
 	rm -r build
 
-PathTracer: build/PathTracer.o build/utils_path.o build/magic.o build/svdDynamic.o build/meshes.o build/brdfread.o
+PathTracer: build/PathTracer.o build/utils_path.o build/magic.o build/svdDynamic.o build/meshes.o
 	$(CC) $^ $(LDFLAGS) -o $@
 
 build/PathTracer.o: PathTracer.c buildScene.c utils_path.h
@@ -46,8 +46,5 @@ build/svdDynamic.o: svdDynamic.c
 	
 build/meshes.o: meshes.c
 	$(CC) $(CCFLAGS) $^ -o $@
-
-build/brdfread.o: brdf/code/BRDFRead.cpp
-	$(CXX) -O3 -c $^ -o $@
 
 .PHONY: all prepare clean debug

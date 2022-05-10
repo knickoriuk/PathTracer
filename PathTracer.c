@@ -16,7 +16,6 @@
 
 #include "utils_path.h"       // <-- This includes PathTracer.h
 #include "magic.h"
-#include "brdf/code/BRDFRead.h"
 
 // DONT use these! instead run `make IS=1 ES=1`
 // if you want to turn on both Is and ES for example.
@@ -193,68 +192,6 @@ void focusRay(struct point3D* lp, struct point3D* c, struct point3D* fp, struct 
    d->pz = intersect.pz - lp->pz;
    d->pw = 1;
    normalize(d);
-}
-
-struct colourRGB sampleBRDF(double* brdf, struct point3D in, struct point3D n, struct point3D* out){
-   // samples a brdf.
-   // brdf: distribution to sample.
-   // in: vector going into the point.
-   // normal: normal at this point
-   // out: random direction in hemisphere.
-   // colour here is returned.
-    double theta_out = acos(2*drand48()-1);
-    if(cos(theta_out) <= 0){
-        theta_out += PI;
-    }
-    struct point3D orig_in = in;
-    drand48(); drand48();
-    double phi_out = 2*PI*drand48();
-    // do magic rotations.
-    // remember to invert incoming vec!
-    in.px = -in.px;
-    in.py = -in.py;
-    in.pz = -in.pz;
-    struct point3D desired_up = {.px = 0, .py = 0, .pz = 1, .pw = 1};
-    in = reorient(n, desired_up, in);
-    double theta_in = acos(in.pz);
-    double phi_in = atan2(in.py, in.px);
-    struct colourRGB col;
-    col.R = 0; col.G = 0; col.B = 0;
-    lookup_brdf_val(brdf, theta_in, phi_in, theta_out, phi_out, &col.R, &col.G, &col.B);
-    if(col.R <= 0 && col.G <= 0 && col.B <= 0){
-        printf("in: (%f, %f, %f)\n", in.px, in.py, in.pz);
-    }
-    out->px = cos(phi_out)*sin(theta_out);
-    out->py = sin(phi_out)*sin(theta_out);
-    out->pz = cos(theta_out);
-    out->pw = 1;
-    //printf("in: (%f, %f, %f) out: (%f, %f, %f) rgb: (%f, %f, %f)\n", in.px, in.py, in.pz, out->px, out->py, out->pz, col.R, col.G, col.B);
-    *out = reorient(desired_up, n, *out);
-    return col;
-}
-
-struct colourRGB sampleBRDFAt(double* brdf, struct point3D in, struct point3D n, struct point3D out){
-   // like sampleBRDF, except the outgoing vector is specified instead of returned randomly.
-    struct point3D orig_in = in;
-    // do magic rotations.
-    // remember to invert incoming vec!
-    in.px = -in.px;
-    in.py = -in.py;
-    in.pz = -in.pz;
-    struct point3D desired_up = {.px = 0, .py = 0, .pz = 1, .pw = 1};
-    in = reorient(n, desired_up, in);
-    double theta_in = acos(in.pz);
-    double phi_in = atan2(in.py, in.px);
-    out = reorient(n, desired_up, out);
-    double theta_out = acos(out.pz);
-    double phi_out = atan2(out.py, out.px);
-    struct colourRGB col;
-    col.R = 0; col.G = 0; col.B = 0;
-    lookup_brdf_val(brdf, theta_in, phi_in, theta_out, phi_out, &col.R, &col.G, &col.B);
-    if(col.R <= 0 && col.G <= 0 && col.B <= 0){
-        printf("inat: (%f, %f, %f)\n", in.px, in.py, in.pz);
-    }
-    return col;
 }
 
 // NOTE: MUST set lambda to -1 before using this!
@@ -539,77 +476,6 @@ void PathTrace(struct ray3D *ray, int depth, struct colourRGB *col, struct objec
       // change this. why? so refraction can hit the same object again.
       obj = NULL;
 
-   /******************** COMPLEX BRDFs ********************/
-   } else {
-      #ifdef __USE_IS
-         struct point3D rand_dir;
-         cosWeightedSample(&n, &rand_dir);
-         normalize(&rand_dir);
-         struct colourRGB col = sampleBRDFAt(obj->brdf, ray->d, n, rand_dir);
-         // Will need to scale by probability of the cos-weighted sample
-         ray->col.R *= col.R / (PI*(1 - RR_prob));
-         ray->col.G *= col.G / (PI*(1 - RR_prob));
-         ray->col.B *= col.B / (PI*(1 - RR_prob));
-
-      #else  
-         struct point3D rand_dir;
-         struct colourRGB col = sampleBRDF(obj->brdf, ray->d, n, &rand_dir);
-         ray->col.R *= col.R * dot2(n, rand_dir) / (1-RR_prob);
-         ray->col.G *= col.G * dot2(n, rand_dir) / (1-RR_prob);
-         ray->col.B *= col.B * dot2(n, rand_dir) / (1-RR_prob);
-      #endif
-
-      #ifdef __USE_ES
-         struct object3D *cur_ls = light_list;
-
-         // Get a pointer to a random LS in the scene, weighted so each has
-         // %LSweight chance to be chosen.
-         double ls_num = drand48();
-         double accumulated_ls_num = cur_ls->LSweight;
-         while(accumulated_ls_num < ls_num){
-            // chosen LS has accumulated_ls_num < random < accumulated_ls_num + lsweight.
-            cur_ls = cur_ls->LSnext;
-            accumulated_ls_num += cur_ls->LSweight;
-         }
-
-         // Build a ray from p to a random point on the LS
-         struct ray3D ray_ES;
-         initRay(&ray_ES, &p, &rand_dir);
-         double rx, ry, rz;
-         cur_ls->randomPoint(cur_ls, &rx, &ry, &rz);
-         ray_ES.d.px = rx-p.px;
-         ray_ES.d.py = ry-p.py;
-         ray_ES.d.pz = rz-p.pz;
-         ray_ES.d.pw = 1;
-         normalize(&ray_ES.d);
-
-         // See if this sample is blocked
-         double lambda_ES = -1;
-         struct point3D n_ES;
-         struct object3D *hit_obj;
-         double _a, _b; // values starting with _ -> unused
-         struct point3D _p;
-         findFirstHit(boxtree, &ray_ES, &lambda_ES, obj, &hit_obj, &_p, &n_ES, &_a, &_b);
-
-         // If the sampled ray hits the lightsource uninterrupted:
-         if (lambda_ES > 0 && hit_obj->isLightSource && dot2(ray_ES.d, n) >= 0) {
-            CEL = 1; // Mark that our explicit sample did hit the LS
-
-            // Determine weight of LS contribution: w = min(1, Als(n.l)(nls.-l) / d^2)
-            double d2 = pow(rx-p.px, 2) + pow(ry-p.py, 2) + pow(rz-p.pz, 2);
-            double weight2 = dot(&n, &ray_ES.d) * -dot(&n_ES, &ray_ES.d);
-            double weight = min(1, (hit_obj->surfaceArea*weight2)/d2);
-            struct colourRGB col = sampleBRDFAt(obj->brdf, ray->d, n, ray_ES.d);
-            ray->I.R += ray->col.R * col.R * hit_obj->col.R * weight / (1-RR_prob);
-            ray->I.G += ray->col.G * col.G * hit_obj->col.G * weight / (1-RR_prob);
-            ray->I.B += ray->col.B * col.B * hit_obj->col.B * weight / (1-RR_prob);
-
-         } else {
-            CEL = 0;
-         }
-      #endif
-      ray->d = rand_dir;
-      ray->p0 = p;
    }
 
     // Cast this ray, and get its colour

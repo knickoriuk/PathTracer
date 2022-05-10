@@ -298,7 +298,6 @@ struct image *newImage(int size_x, int size_y);
 void imageOutput(struct image *im, const char *filename);
 void dataOutput(double *im, int sx, char *name);
 void deleteImage(struct image *im);
-void setBRDF(struct object3D* obj, const char* brdf);
 struct point3D hemisphereReorient(struct point3D, struct point3D);
 struct point3D reorient(struct point3D from, struct point3D to, struct point3D v);
 // Cleanup: Release memory allocated to objects and textures. Note that you will

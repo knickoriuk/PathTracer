@@ -16,7 +16,7 @@
 ********************************************************************************/
 
 #include "utils_path.h"
-#include "brdf/code/BRDFRead.h"
+
 #define min(A,B) ((A)>(B)?(B):(A))
 // A useful 4x4 identity matrix which can be used at any point to
 // initialize or reset object transformations
@@ -149,13 +149,6 @@ void insertObject(struct object3D *o, struct object3D **list) {
             light_list->LSnext = o;
         }
     }
-}
-
-void setBRDF(struct object3D* obj, const char* brdf){
-    obj->diffPct = 0;
-    obj->reflPct = 0;
-    obj->tranPct = 0;
-    obj->brdf = read_brdf(brdf);
 }
 
 struct object3D *newPlane(double diffPct, double reflPct, double tranPct, double r, double g, double b, double refl_sig, double r_index) {

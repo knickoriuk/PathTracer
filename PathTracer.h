@@ -141,12 +141,7 @@ struct object3D{
    double diffPct;         // Diffuse component proportion 
    double reflPct;         // Purely reflecting component proportion
    double tranPct;         // Refracting component proportion
-               // NOTE: diffPct+reflPct+tranPct=1.0
-   // brdf table for objects.
-   // o != o2 DOES not imply o->brdf != o2.brdf !
-   // if brdf is set, diffpct, reflpct, tranpct will all be set to 0.
-   double* brdf;
-
+                           // NOTE: diffPct+reflPct+tranPct=1.0
    double refl_sig;  // For reflective component, controls the amount of spread
    double r_index;   // Index of refraction
    int    isLightSource;   // Flag to indicate if this is an area light source
