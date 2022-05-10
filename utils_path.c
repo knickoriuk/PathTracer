@@ -1,10 +1,7 @@
 /*
    CSC D18 - Path Tracer
 
-   Utilities for the Path Tracer. 
-
-   Derived from the Ray Tracer code. You should already be familiar 
-   with most of what is here.
+   Utilities for the Path Tracer.
 
    Last updated: Aug. 2017  -  F.J.E.
 */
@@ -1222,7 +1219,7 @@ void cylSample(struct object3D *cyl, double *x, double *y, double *z) {
 
 
 //////////////////////////////////
-// Importance sampling for BRDF
+// Importance sampling
 //////////////////////////////////
 void cosWeightedSample(struct point3D *n, struct point3D *d) {
    // This function returns a randomly sampled direction over
@@ -1230,7 +1227,7 @@ void cosWeightedSample(struct point3D *n, struct point3D *d) {
    // sampled direction comes from a distribution weighted
    // by the cosine of the angle between n and d.
    // Use this for importance sampling for diffuse surfaces.
-   
+
    // Random sample on hemisphere with cosine-weighted distribution
     double u1,r,theta,phi;
  double x,y,z,c;
@@ -1266,6 +1263,7 @@ void cosWeightedSample(struct point3D *n, struct point3D *d) {
  d->pw=1.0;
  matVecMult(R,d);
 }
+
 
 /////////////////////////////////
 // Texture mapping functions

@@ -3,12 +3,6 @@
 
    Utilities for the Path Tracer.
 
-   Derived from the corresponding file for the ray tracer, you should
-   already be familiar with most of what is here.
-
-   You MAY modify this file but only to ADD MORE OBJECT DEFINITIONS,
-   the rest of the file must remain unchanged.
-
    Code for short inline functions is here, not in utils.c
 
    Last Update: F.J. Estrada, Aug. 2017
@@ -263,7 +257,7 @@ void triangleSample(struct object3D *plane, double *x, double *y, double *z);
 void cubeSample(struct object3D *plane, double *x, double *y, double *z);
 void roomSample(struct object3D *plane, double *x, double *y, double *z);
 
-// Importance Sampling for BRDF of diffuse surfaces
+// Importance Sampling
 void cosWeightedSample(struct point3D *n, struct point3D *d);
 
 // Functions to compute intersections for objects.
